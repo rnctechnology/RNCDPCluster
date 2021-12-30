@@ -61,7 +61,7 @@ COPY rncentrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/rncentrypoint.sh
 
 RUN chmod 777 -R /home/$NB_USER/work/
-COPY sample/* /home/$NB_USER/work/
+COPY sample/* /tmp/
 RUN mkdir -p /usr/local/spark/logs
 RUN fix-permissions /usr/local/spark/logs
 

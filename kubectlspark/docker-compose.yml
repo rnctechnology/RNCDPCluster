@@ -1,0 +1,87 @@
+version: '3'
+
+services:
+  mysqldb:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - mysqldb-data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: 'rnctech'
+      MYSQL_USER: 'root'
+      MYSQL_PASSWORD: 'tiger'
+      MYSQL_ROOT_PASSWORD: 'tiger123'
+    networks: [ 'localnet' ]
+  minio-service:
+    image: minio/minio
+    container_name: lminio
+    restart: always
+    command: server /data  --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /tmp/minio/data:/data
+      - /tmp/minio/config:/root/.minio
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: Admin123
+  spark-master:
+    image: rnctech/spark:latest
+    container_name: sparkmaster
+    hostname: spark-master
+    environment:
+      - SPARK_MODE=master
+      - DEPLOY_ENV=dev
+      - JDBC_URL=jdbc:mysql://mysqldb:3306/rnctech
+      - DB_PASSWORD=tiger
+      - DB_USER=root
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+      - '8998:8998'
+    volumes:
+      - 'spark_data:/var/data'
+    networks: [ 'localnet' ]
+  spark-worker-1:
+    image: rnctech/spark:latest
+    container_name: loops-sparkworker1
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - DEPLOY_ENV=dev
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - JDBC_URL=jdbc:mysql://mysqldb:3306/rnctech
+      - DB_PASSWORD=tiger
+      - DB_USER=root
+    ports:
+      - '8081:8081'
+    networks: ['localnet']
+  spark-worker-2:
+    image: rnctech/spark:latest
+    container_name: loops-sparkworker2
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - DEPLOY_ENV=dev
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - JDBC_URL=jdbc:mysql://mysqldb:3306/rnctech
+      - DB_PASSWORD=tiger
+      - DB_USER=root
+    ports:
+      - '8082:8081'
+    networks: ['localnet']
+networks:
+  localnet:
+    driver: bridge
+volumes:
+  mysqldb-data:
+  spark_data:
