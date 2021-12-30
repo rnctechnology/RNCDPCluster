@@ -1,0 +1,72 @@
+# Copyright (c) rnctech Platform Team.
+# Distributed under the terms of the Modified BSD License.
+
+FROM jupyter/pyspark-notebook:spark-3.2.0
+MAINTAINER alan@rnctech.com
+
+USER root
+RUN apt-get update && apt-get install -y graphviz openssh-client git lsof curl unzip
+
+# install livy at 8998
+ENV LIVY_VERSION=0.7.1-incubating LIVY_HOME=/opt/livy
+
+RUN curl -O -L http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip && \
+    unzip apache-livy-${LIVY_VERSION}-bin.zip -d /opt/ && \
+    rm -f apache-livy-${LIVY_VERSION}-bin.zip && \
+    mv /opt/apache-livy-${LIVY_VERSION}-bin ${LIVY_HOME}
+
+RUN mkdir -p /opt/livy/logs
+RUN fix-permissions /opt/livy/logs
+
+COPY livy/* ${LIVY_HOME}/conf/
+
+USER $NB_UID
+
+RUN mamba install --quiet --yes \
+    'wheel' \
+    'awscli' \
+    'boto3' \
+    'Automat' \
+    'py-xgboost' \
+    'xgboost' \
+    'graphviz' \
+    'ipython-sql' \
+    'findspark' && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+# RUN mamba install --quiet --yes 'tensorflow' && \
+#    mamba clean --all -f -y && \
+#    fix-permissions $CONDA_DIR && \
+#    fix-permissions /home/$NB_USER
+
+RUN mamba install --quiet --yes 'spylon-kernel' && \
+    mamba clean --all -f -y && \
+    python -m spylon_kernel install --sys-prefix && \
+    rm -rf "/home/${NB_USER}/.local" && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+USER root
+
+RUN mkdir -p /home/$NB_USER/.aws
+COPY config/credentials /home/$NB_USER/.aws/credentials
+RUN fix-permissions /home/$NB_USER/.aws/
+COPY jars/* ${SPARK_HOME}/jars/
+
+RUN fix-permissions /tmp
+COPY rncentrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/rncentrypoint.sh
+
+RUN chmod 777 -R /home/$NB_USER/work/
+COPY sample/* /home/$NB_USER/work/
+RUN mkdir -p /usr/local/spark/logs
+RUN fix-permissions /usr/local/spark/logs
+
+RUN fix-permissions $CONDA_DIR && fix-permissions /home/${NB_USER}
+
+CMD ["/usr/local/bin/rncentrypoint.sh"]
+EXPOSE 8080 8888 8998
+
+USER $NB_UID

@@ -1,0 +1,50 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: spark-worker
+  labels:
+    app: spark-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spark-worker
+  template:
+    metadata:
+      labels:
+        app: spark-worker
+    spec:
+      containers:
+        - name: spark-worker
+          image: jupyter/all-spark-notebook:spark-3.2.0
+          ports:
+            - name: port8081
+              containerPort: 8081
+          env:
+          - name: JDBC_URL
+            valueFrom:
+              secretKeyRef:
+                name: rnctech-dev
+                key: JDBC_URL
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: rnctech-dev
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: rnctech-dev
+                key: DB_PASSWORD
+          - name: AWS_BUCKET_NAME
+            value: '$AWS_BUCKET_NAME'
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/tmp
+              name: spark-data
+      restartPolicy: Always
+      volumes:
+        - name: spark-data
+          persistentVolumeClaim:
+            claimName: spark-data

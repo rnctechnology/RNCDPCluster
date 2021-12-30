@@ -1,0 +1,56 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: spark-master
+  labels:
+    app: spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark
+  template:
+    metadata:
+      labels:
+        app: spark
+    spec:
+      containers:
+        - name: spark-master
+          image: jupyter/all-spark-notebook:spark-3.2.0
+          ports:
+            - name: port8080
+              containerPort: 8080
+            - name: port8888
+              containerPort: 8888
+            - name: livyport
+              containerPort: 8998
+            - name: master7077
+              containerPort: 7077
+          env:
+            - name: JDBC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rnctech-dev
+                  key: JDBC_URL
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rnctech-dev
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rnctech-dev
+                  key: DB_PASSWORD
+            - name: AWS_BUCKET_NAME
+              value: '$AWS_BUCKET_NAME'
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/tmp
+              name: spark-data
+      restartPolicy: Always
+      volumes:
+        - name: spark-data
+          persistentVolumeClaim:
+            claimName: spark-data
