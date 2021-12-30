@@ -18,7 +18,8 @@ RUN curl -O -L http://archive.apache.org/dist/incubator/livy/${LIVY_VERSION}/apa
 RUN mkdir -p /opt/livy/logs
 RUN fix-permissions /opt/livy/logs
 
-COPY livy/* ${LIVY_HOME}/conf/
+COPY livy/* ${LIVY_HOME}/config/
+COPY spark/* ${SPARK_HOME}/conf/
 
 USER $NB_UID
 

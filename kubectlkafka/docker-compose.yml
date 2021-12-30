@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks: ['localnet']
+  mysqldb:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_DATABASE: 'rnctech'
+      MYSQL_USER: 'root'
+      MYSQL_PASSWORD: 'tiger'
+      MYSQL_ROOT_PASSWORD: 'tiger123'
+    volumes:
+      - mysql-db:/var/lib/mysql
+    networks: ['localnet']
+  zookeeper:
+    image: wurstmeister/zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - 'zookeeper_data:/usr/share/zookeeper'
+    networks: ['localnet']
+  kafka:
+    image: wurstmeister/kafka:2.13-2.7.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - '29092:29092'
+      - '1099-1099'
+      - '1098-1098'
+    volumes:
+      - 'kafka_data:/usr/share/kafka'
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_DELETE_TOPIC_ENABLE=true
+      - KAFKA_LOG_RETENTION_HOURS=96
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_LISTENERS=PLAINTEXT://:29092,PLAINTEXT_HOST://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://127.0.0.1:9092
+    networks: ['localnet']
+  etlconsumer:
+    image: rnctech/etlconsumer:latest
+    depends_on: ['redis','mysqldb','zookeeper','kafka']
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - JDBC_URL=jdbc:mysql://mysqldb:3306/rnctech
+      - DB_PASSWORD=tiger
+      - DB_USER=root
+      - kafka_brokers=kafka:29092
+      - kafka_interval=5000
+    networks: ['localnet']
+networks:
+  localnet:
+    driver: bridge
+volumes:
+  redis-data:
+  mysql-db:
+  zookeeper_data:
+  kafka_data:
