@@ -12,7 +12,10 @@ kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount
 
 0.2, create storageClass or using cloud storage
 
-for local fs,  on nodes
+-- find nodes in cluster
+kubectl get nodes -o wide
+
+for local fs,  on one of nodes
 
 mkdir -p /mnt/data
 kubectl apply -f pv.yaml
