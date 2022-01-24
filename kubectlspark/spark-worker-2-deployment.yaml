@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: spark-worker-2
+  name: spark-worker-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: spark-worker-2
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/localnet: "true"
+        io.kompose.service: spark-worker-2
+    spec:
+      containers:
+        - env:
+            - name: AWS_BUCKET_NAME
+              value: datastore
+            - name: DEPLOY_ENV
+              value: prod
+            - name: JDBC_PWD
+              value: tiger
+            - name: JDBC_URL
+              value: jdbc:mariadb://mariadb:3306/rnctech
+            - name: JDBC_USER
+              value: root
+            - name: MINIO_ROOT_PASSWORD
+              value: V7f1CwQqAcwo80March141966SSx5ohQ9GSrr12
+            - name: MINIO_ROOT_USER
+              value: ALANCHEN20211228S3KEY
+            - name: S3_ACCESS_KEY_ID
+              value: ALANCHEN20211228S3KEY
+            - name: S3_SECRET_ACCESS_KEY
+              value: V7f1CwQqAcwo80March141966SSx5ohQ9GSrr12
+            - name: SPARK_MASTER_URL
+              value: spark://spark-master:7077
+            - name: SPARK_MODE
+              value: worker
+            - name: SPARK_WORKER_CORES
+              value: "2"
+            - name: SPARK_WORKER_MEMORY
+              value: 2G
+          image: rnctech/spark:latest
+          name: rnc-worker2
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+          resources: {}
+      restartPolicy: Always
+status: {}

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="jars">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/kubectlspark/jars/lift-json_2.11-3.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/kubectlspark/jars/mysql-connector-java-5.1.38-bin.jar!/" />
+      <root url="jar://$PROJECT_DIR$/kubectlspark/jars/spark-tree-plotting-0.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

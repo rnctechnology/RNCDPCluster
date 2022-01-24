@@ -3,12 +3,14 @@ kind: PersistentVolumeClaim
 metadata:
   creationTimestamp: null
   labels:
-    io.kompose.service: spark-data
-  name: spark-data
+    io.kompose.service: mariadb-data
+  name: mariadb-data
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 100Mi
+  storageClassName: standard
+
 status: {}
